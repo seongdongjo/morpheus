@@ -1,0 +1,23 @@
+#)압축 풀때 파일이름이 길어서 몇개 파일이 압축이 안풀린다. -> 파일경로이름을 최소로해서 푼다.
+(C드라이브에서 풀거나 그래도안되면 압축파일의 이름을 1로 바꾼후 다시푼다)
+
+#)모피어스 sdk 연결 -> M-SDK Manager 에서 다 설치
+
+==========================================================================
+#)com_board_master Table
+bbsMasterSeq = BOARD_MST~ = board_seq
+board_Kind(게시판종류) = DTL00000092 (이미지) 95(동영상)
+addfile_yn (첨부파일여부)
+addfile_cnt (첨부파일개수)
+comment_yn (댓글여부)
+insert_authority (등록권한있는자) -> 60,50,40,30,20,10,4 ~ 이렇게 데이터가 들어가있음
+upt_date (수정일)
+public_yn (글공개여부)
+board_desc (게시판 설명)
+
+#)com_board_comment
+comment_seq = CMT_000000030 ..
+
+
+
+
