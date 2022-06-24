@@ -51,3 +51,69 @@ SELECT SCH_CD
 출신학교: [{schCd=111, schNm=한국해양대학교}, {schCd=112, schNm=목포해양대학교}, .....
 
 =================================================================================
+#)회원정보는 koswec_job.s_seaman_info 에 있다. (PID(주민), tel은 집전화, handyphone은 휴대폰)
+#)koswec.member_info에는 mi_serial이 기본키이다., mi_mggrade는 -1:관리자, 10: 선사, 20: 선원
+
+#)trim(특정한 문자 제거, 제거할 문자를 입력하지 않으면 공백이 제거된다)
+설정값으로는 Leading(왼쪽에서 제거), Trailing(오른쪽에서 제거), both(양쪽에서 제거)
+설정을 특별히 해주지 않으면 both로 자동설정이 된다.
+
+********** trim은 한문자만 제거가능!!!!!
+
+SELECT TRIM('     oracleStudy     ') AS result FROM DUAL; -- 'oracleStudy'
+SELECT TRIM('o' FROM 'oracleStudy') AS result FROM DUAL; -- racleStudy 
+SELECT TRIM('디' FROM '디게 좋은 오라클 스터디') AS result FROM DUAL; -- 게 좋은 오라클 스터
+SELECT TRIM(BOTH '디' FROM '디게 좋은 오라클 스터디') AS result FROM DUAL; -- 게 좋은 오라클 스터 
+SELECT TRIM(LEADING '디' FROM '디게 좋은 오라클 스터디') AS result FROM DUAL; --게 좋은 오라클 스터디
+SELECT TRIM(TRAILING '디' FROM '디게 좋은 오라클 스터디') result FROM DUAL; --디게 좋은 오라클 스터
+
+//뒤에 공백이 있어서 '디'를 지우지 못했다 -> 공백지우고 지워야한다.
+SELECT TRIM(TRAILING '디' FROM '디게 좋은 오라클 스터디 ') result FROM DUAL;--디게 좋은 오라클 스터디
+
+//두개의 문자는 에러가 난다.
+SELECT TRIM(TRAILING '디게' FROM '디게 좋은 오라클 스터디 ') AS result FROM DUAL; -- ERROR
+
+
+********** LTRIM, RTRIM은 trim과 다르게 두글자 이상이 가능하다.
+SELECT LTRIM('     oracleStudy     ') AS result FROM DUAL; -- 'oracleStudy     '
+SELECT LTRIM('디게 좋은 오라클 스터디 ' , '디') AS result FROM DUAL; -- '게 좋은 오라클 스터디'
+SELECT LTRIM('디게 좋은 오라클 스터디 ' , '디게 ') AS result FROM DUAL; -- '좋은 오라클 스터디'
+SELECT LTRIM('디게 좋은 오라클 스터디 ' , '게다') AS result FROM DUAL; -- '디게 좋은 오라클 스터디'
+SELECT LTRIM('디게 좋은 오라클 스터디 ' , '디그다') AS result FROM DUAL; -- '게 좋은 오라클 스터디'
+SELECT LTRIM('디게 좋은 오라클 스터디 ' , '디게다') AS result FROM DUAL; -- ' 좋은 오라클 스터디'
+
+
+SELECT RTRIM('     oracleStudy     ') AS result FROM DUAL; -- '     oracleStudy'
+SELECT RTRIM('디게 좋은 오라클 스터디 ' , '디') AS result FROM DUAL; -- '디게 좋은 오라클 스터'
+SELECT RTRIM('디게 좋은 오라클 스터디 ' , '디터스 ') AS result FROM DUAL; -- '디게 좋은 오라클 '
+SELECT RTRIM('디게 좋은 오라클 스터디 ' , '스터디') AS result FROM DUAL; -- '디게 좋은 오라클 스터디 '
+SELECT RTRIM('디게 좋은 오라클 스터디' , '디그다') AS result FROM DUAL; -- '디게 좋은 오라클 스터'
+
+
+//LTRIM('COCONUT', 'CO') -> nut 만 남는다.
+====================================================================================
+#)휴대전화 입력 폼
+<td>
+	<input name="hp1" type="text" id="hp1" class="txt72 txt" value="${marinerInfoVO.hp1}" size="4" maxlength="4" onblur="checkTel(this,this.value);" onkeypress="fc_onlyNum();">
+	 - 
+	<input name="hp2" type="text" id="hp2" class="txt72 txt" value="${marinerInfoVO.hp2}" size="4" maxlength="4" onblur="checkNum(this,this.value);" onkeypress="fc_onlyNum();"> - 
+	<input name="hp3" type="text" id="hp3" class="txt72 txt" value="${marinerInfoVO.hp3}" size="4" maxlength="4" onblur="checkNum(this,this.value);" onkeypress="fc_onlyNum();">
+</td>
+
+----------------------
+function checkNum(theObj, theValue){
+			console.log(theObj)
+			console.log(theValue)
+			var num, i;
+			num = "0123456789";
+			for(i = 0 ; i<theValue.length ; i++){
+				if(num.indexOf(theValue.charAt(i)) == -1){
+					alert("숫자만 입력해 주세요.");
+					theObj.value = "";
+					theObj.focus();
+					return false;
+				}
+			}
+			return true;
+		}
+=======================================================================
