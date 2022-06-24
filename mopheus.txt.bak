@@ -101,7 +101,7 @@ SELECT RTRIM('디게 좋은 오라클 스터디' , '디그다') AS resul
 </td>
 
 ----------------------
-function checkNum(theObj, theValue){
+function checkNum(theObj, theValue){ //theObj에는 hp2 폼이, theValue에는 5370 이 온다
 			console.log(theObj)
 			console.log(theValue)
 			var num, i;
@@ -117,3 +117,151 @@ function checkNum(theObj, theValue){
 			return true;
 		}
 =======================================================================
+#)년도, 월별, 일별 select box 만들기
+
+var now = new Date();
+var nyear = now.getFullYear();
+var nmon = (now.getMonth()+1) > 9 ? ''+(now.getMonth()+1) : '0'+(now.getMonth()+1); //한자리는 0을 붙힌다.
+var ndate = (now.getDate()+1) > 9 ? ''+(now.getDate()+1) : '0'+(now.getDate()+1);
+var birthday = document.membForm.miBirthday.value;
+			
+			//년도 selectbox만들기
+			for(var sy = 1930 ; sy <= nyear ; sy++) {
+				if(sy == birthday.substring(0,4)){
+					$('#mi_year').append('<option value="' + sy + '" selected = "selected">' + sy + '</option>');
+				}else{
+					$('#mi_year').append('<option value="' + sy + '">' + sy + '</option>');	
+				}
+			}
+			//월별 selectbox 만들기
+			for(var i=1; i <= 12; i++) {
+				var sm = i > 9 ? i : "0"+i;
+				
+				if(sm == birthday.substring(4,6)){
+					$('#mi_month').append('<option value="' + sm + '" selected = "selected">' + sm + '</option>');
+				}else{
+					$('#mi_month').append('<option value="' + sm + '">' + sm + '</option>');	
+				}
+			}
+			//일별 selectbox 만들기
+			for(var i=1; i <= 31; i++) {
+				var sm = i > 9 ? i : "0"+i;
+				
+				if(sm == birthday.substring(6,8)){
+					$('#mi_date').append('<option value="' + sm + '" selected = "selected">' + sm + '</option>');
+				}else{
+					$('#mi_date').append('<option value="' + sm + '">' + sm + '</option>');	
+				}
+			}
+======================================================================
+function addrDetailChk1(obj){
+		if(obj.value.length > 0){
+			var expText = /^[^?#&+\"\\]+$/;
+			if(expText.test(obj.value) != true){
+				alert('특수문자 ? # & + \\ " 를 입력 할 수 없습니다.');
+				obj.value="";
+			}
+		}
+	}
+	
+<a class="close" href="javascript:popClose();" title="창닫기" tabindex="3">닫기</a>
+
+	function popClose(){
+		window.close();
+	}
+==========================================================================
+#)Serialize란
+
+
+
+==========================================================================
+//주소찾기하면 이렇게 xml로 넘어온다.
+<?xml version="1.0" encoding="UTF-8"?>
+	<results>
+		<common>
+			<totalCount>1</totalCount>
+			<currentPage>1</currentPage>
+			<countPerPage>5</countPerPage>
+			<errorCode>0</errorCode>
+			<errorMessage>정상</errorMessage>
+		</common>
+		<juso>
+			<roadAddr>경상남도 양산시 삼호3길 12(삼호동, 모아주택)</roadAddr>
+			<roadAddrPart1>경상남도 양산시 삼호3길 12</roadAddrPart1>
+			<roadAddrPart2>(삼호동, 모아주택)</roadAddrPart2>
+			<jibunAddr>경상남도 양산시 삼호동 995-2 모아주택</jibunAddr>
+			<engAddr>12 Samho 3-gil, Yangsan-si, Gyeongsangnam-do</engAddr>
+			<zipNo>50530</zipNo>
+			<admCd>4833011400</admCd>
+			<rnMgtSn>483304814412</rnMgtSn>
+			<bdMgtSn>4833011400109950002034742</bdMgtSn>
+			<detBdNmList></detBdNmList>
+			<bdNm>모아주택</bdNm>
+			<bdKdcd>1</bdKdcd>
+			<siNm>경상남도</siNm>
+			<sggNm>양산시</sggNm>
+			<emdNm>삼호동</emdNm>
+			<liNm></liNm>
+			<rn>삼호3길</rn>
+			<udrtYn>0</udrtYn>
+			<buldMnnm>12</buldMnnm>
+			<buldSlno>0</buldSlno>
+			<mtYn>0</mtYn>
+			<lnbrMnnm>995</lnbrMnnm>
+			<lnbrSlno>2</lnbrSlno>
+			<emdNo>01</emdNo>
+		</juso>
+	</results>
+
+#)ajax를 요청하면 위에처럼 결과를 받는다. 아래에서는 xmlStr로 받았다.
+function searchUrlJuso(){
+		$("#resultData").hide();
+		var frm = document.AKCFrm;
+		frm.keyword.value = checkSearchedWord(frm.keyword); // 특수문자 및 sql예약어 제거, 20160912
+		$("#keyword").val(validateJuso($("#keyword").val())); //공백 및 특수문자 제거
+		$("#keyword").val(regExpCheckJuso($("#keyword").val()));
+		
+		$.ajax({
+			 //url :"http://www.juso.go.kr/addrlink/addrLinkUrl.do"  //인터넷망
+		     url :"https://www.juso.go.kr/addrlink/addrLinkApiJsonp.do"  //내부행망
+		     //url :"http://10.182.60.20/addrlink/addrLinkApiJsonp.do"  //행정망
+			,type:"post"
+			,data:$("#AKCFrm").serialize()
+			,dataType:"jsonp"
+			,crossDomain:true
+			,success:function(xmlStr){
+				console.log($("#AKCFrm").serialize())
+				if(navigator.appName.indexOf("Microsoft") > -1){
+					var xmlData = new ActiveXObject("Microsoft.XMLDOM");
+					xmlData.loadXML(xmlStr.returnXml)
+				}else{
+					var xmlData = xmlStr.returnXml;
+				}
+				$(".popSearchNoResult").html("");
+				var errCode = $(xmlData).find("errorCode").text();
+				var errDesc = $(xmlData).find("errorMessage").text();
+				
+				var totalCount = $(xmlData).find("totalCount").text();
+				var currentPage = $(xmlData).find("currentPage").text();
+				
+				if( parseInt(totalCount) > 1000 && currentPage == "1" )
+					alert("검색 결과가 너무 많습니다(1,000건 이상)\n검색어 예를 참조하여 검색하시기 바랍니다.");
+				
+				if(errCode != "0"){
+					alert(errDesc);
+				}else{
+					if(xmlStr != null){
+						makeList(xmlData);
+						console.log(xmlData)
+					}
+				}
+			}
+		    ,error: function(xhr,status, error){
+		    	//alert("에러발생");
+		    	alert("검색에 실패하였습니다 \n 다시 검색하시기 바랍니다.");
+		    }
+		});
+			
+	}
+=========================================================================
+
