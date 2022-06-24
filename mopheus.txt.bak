@@ -171,9 +171,31 @@ function addrDetailChk1(obj){
 	}
 ==========================================================================
 #)Serialize란
+form요소를 아래처럼 직렬화로 바꾼다.
 
+iframe=&confmKey=U01TX0FVVEgyMDIxMDExOTE0MTAwNTExMDcxNDI%3D&encodingType=&cssUrl=&resultType=4&currentPage=1
+&countPerPage=5&rtRoadAddr=&rtAddrPart1=&rtAddrPart2=&rtEngAddr=&rtJibunAddr=&rtZipNo=&rtAdmCd=&rtRnMgtSn=
+&rtBdMgtSn=&rtDetBdNmList=&rtBdNm=&rtBdKdcd=&rtSiNm=&rtSggNm=&rtEmdNm=&rtLiNm=&rtRn=&rtUdrtYn=&rtBuldMnnm=
+&rtBuldSlno=&rtMtYn=&rtLnbrMnnm=&rtLnbrSlno=&rtEmdNo=&searchType=&dsgubuntext=&dscity1text=&dscounty1text=
+&dsemd1text=&dsri1text=&dsrd_nm1text=&dssan1text=&keyword=%EC%82%BC%ED%98%B83%EA%B8%B8+12&rtAddrDetail=
 
+-------------------------
+Ajax를 이용해 서버단으로 데이터를 전송할 때 {키:값} 의 형태인 Json 자료형으로 데이터를 보내게 되는데
 
+new ajax.Request(URL,
+{
+	name: '~~~',
+	age: '20',
+}
+
+대충 이렇게 되는데 이게 필드가 많아지면 힘들다. 그래서 폼에 있는 데이터를 한꺼번에 보내고 싶을 때 serialize() 함수를 쓴다.
+
+var jData = $("frm").serialize();
+//아래처럼 보내면 된다.
+new ajax.Request(url,
+{
+	param : jData,
+}
 ==========================================================================
 //주소찾기하면 이렇게 xml로 넘어온다.
 <?xml version="1.0" encoding="UTF-8"?>
@@ -263,5 +285,64 @@ function searchUrlJuso(){
 		});
 			
 	}
-=========================================================================
+	
+---------------------------
+#)주소 페이징
+function pageMake(xmlStr){
+		var total = $(xmlStr).find("totalCount").text(); // 총건수
+		var pageNum =  $(xmlStr).find("currentPage").text();// 현재페이지
+		var paggingStr = "";
+		if(total < 1){
+		}else{
+			var PAGEBLOCK= 10;
+			var pageSize= parseInt( $(xmlStr).find("countPerPage").text() ); //한 페이지당 5개씩 띄운다.
+			var totalPages = Math.floor((total-1)/pageSize) + 1;
+			var firstPage = Math.floor((pageNum-1)/PAGEBLOCK) * PAGEBLOCK + 1;		
+			if( firstPage <= 0 ) firstPage = 1;		
+			var lastPage = firstPage-1 + PAGEBLOCK;
+			if( lastPage > totalPages ) lastPage = totalPages;		
+			var nextPage = lastPage+1 ;
+			var prePage = firstPage-5 ;
+			
+			if(totalPages > 1){
+				if( firstPage > PAGEBLOCK ){
+					paggingStr +=  "<a class='skip prev' href='javascript: $(\"#currentPage\").val("+prePage+");  searchUrlJuso();'>이전으로</a>  " ;
+				}
+				for( i=firstPage; i<=lastPage; i++ ){
+					if( pageNum == i )
+						paggingStr += "<strong>" + i + "</strong>  ";
+					else
+						paggingStr += "<a href='javascript:$(\"#currentPage\").val("+i+");  searchUrlJuso();'>" + i + "</a>  ";
+				}		
+				if( lastPage < totalPages ){
+					paggingStr +=  "<a class='skip next' href='javascript: $(\"#currentPage\").val("+nextPage+");  searchUrlJuso();'>다음으로</a>";
+				}
+			}
+			$("#pageApi").html(paggingStr);
+		}	
+	}	
+--------------------------------
 
+
+
+
+
+	
+=========================================================================
+#)Array.join([구분자])
+배열 내에 모든 값들을 순서대로 연결시켜주고, 배열의 길이가 0이면 빈 문자열을 반환하게 된다. 그리고 구분값이 존재하지 않으면 쉼표로 표기되어 연결되고 빈 문자열일 경우 구분없이 연결된다.
+
+var test = ['a', 'b', 'c'];
+var result1 = test.join();  
+// result : a,b,c
+
+var result2 = test.join('');  
+// result : abc
+
+var test = ['2020', '01', '01'];
+var result1 = test.join('-');
+// result : 2020-01-01
+
+var result2 = test.join('/'); 
+// result : 2020/01/01
+======================================================================
