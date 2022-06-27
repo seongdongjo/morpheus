@@ -474,6 +474,7 @@ firstRecordIndex	페이징 SQL의 조건절에 사용되는 시작 rownum	no	   
 lastRecordIndex	페이징 SQL의 조건절에 사용되는 마지막 rownum	    no	      lastRecordIndex = currentPageNo * recordCountPerPage
 
 =============================================================================
+#)선박조회 시 순서대로 업종먼저선택(kndcd) -> 선종선택 -> 상세선종 -> 업체명(입력) -> 선박명(입력)
 <!-- 업종목록 -->
 	<select id="KWShipSearchDAO.selectKndcdList" resultClass="egovMap">
 		<![CDATA[
@@ -484,4 +485,119 @@ lastRecordIndex	페이징 SQL의 조건절에 사용되는 마지막 rownum	    
 	</select>
 	
 //결과 
+KNDCD   CDNM     KNDCDNAME
+1       외항상선    1: 외항상선
+2       내항상선    2: 내항상선
+3       연근해어선   3: 연근해어선
+4       원양어선    4: 원양어선
+5       해외취업상선 5: 해외취업상선
+6       해외취업어선 6: 해외취업어선
 
+---------------------
+<!-- 선종목록 -->
+	<select id="KWShipSearchDAO.selectShpkndList" parameterClass="shipSearchVO" resultClass="egovMap">
+		<![CDATA[
+			  SELECT A.VESSEL_CODE,
+			         A.VESSEL_NAME,
+			         A.VESSEL_KIND,
+			         A.VESSEL_CODE || ': ' || A.VESSEL_NAME AS VESSELNAME
+			    FROM KOSWEC_JOB.SMCM14 A
+			   WHERE LENGTH (A.VESSEL_CODE) = 2 
+		]]>
+		<isNotEmpty property="kndcd">
+		<isEqual prepend="AND" property="kndcd" compareValue="1"><![CDATA[ VESSEL_CODE < 30 ]]></isEqual>
+		<isEqual prepend="AND" property="kndcd" compareValue="2"><![CDATA[ VESSEL_CODE < 30 ]]></isEqual>
+		<isEqual prepend="AND" property="kndcd" compareValue="5"><![CDATA[ VESSEL_CODE < 30 ]]></isEqual>
+		<isEqual prepend="AND" property="kndcd" compareValue="3"><![CDATA[ VESSEL_CODE > 30 ]]></isEqual>
+		<isEqual prepend="AND" property="kndcd" compareValue="4"><![CDATA[ VESSEL_CODE > 30 ]]></isEqual>
+		<isEqual prepend="AND" property="kndcd" compareValue="6"><![CDATA[ VESSEL_CODE > 30 ]]></isEqual>
+		</isNotEmpty>
+		<![CDATA[
+			ORDER BY A.VESSEL_CODE
+    	]]>
+	</select>
+	
+//결과
+VESSEL_CODE   VESSEL_NAME   VESSEL_KIND    VESSELNAME
+22            기타            Z              22:기타
+11            잡화            A              11:잡화
+12            컨테이너         B              12: 컨테이너
+13            유조            C              13: 유조
+...
+
+---------------------------
+<!-- 상세선종목록 -->
+	<select id="KWShipSearchDAO.selectDtlshpkndList" parameterClass="shipSearchVO" resultClass="egovMap">
+		<![CDATA[
+			SELECT 	A.VESSEL_CODE,
+					A.VESSEL_NAME,
+					A.VESSEL_KIND,
+					A.VESSEL_CODE || ': ' || A.VESSEL_NAME AS VESSELNAME
+			FROM 	KOSWEC_JOB.SMCM14 A
+			WHERE 	1 = 1 
+		]]>
+		<isNotEmpty property="vesselKind" prepend="AND">
+		<![CDATA[
+					A.VESSEL_KIND = #vesselKind#
+		]]>
+		</isNotEmpty>
+		<![CDATA[
+			AND 	LENGTH (A.VESSEL_CODE) <> 2
+			ORDER BY A.VESSEL_CODE
+    	]]>
+	</select>
+---------------------------
+#)여기서 onchange란 selectbox에서 값을 선택했을 때 해당함수로 이동하는 것이다. 
+
+<form name="nextForm" action ="/koswec/information/shipsearch/selectShipSearchList.do" method="post">
+	<strong class="txt">업종</strong>
+		<select id="kndcdList" name="kndcdList" onchange="selectKndcdList(this.value);" title="검색분류 선택" class="width15s mal-10" style="width:15%;">
+			<option value="">선택</option>
+				<c:forEach var="kndcdList" items="${shipSearchVO.kndcdList}">
+				<option  value="${kndcdList.kndcd}" <c:if test="${shipSearchVO.kndcd == kndcdList.kndcd}">selected</c:if>> ${kndcdList.kndcdname}</option>
+			</c:forEach>
+		</select>
+	<input type="image" src="/images/img/btn_search.gif" onclick="selectShipSearchList(); return false;" alt="검색" class="add-width15s-wd2 mar10">
+</form>
+--------------------------
+<script>
+			function linkPage(pageNo){ //페이지번호 클릭 시
+				document.nextForm.pageIndex.value = pageNo;
+				document.nextForm.action = "/koswec/information/shipsearch/selectShipSearchList.do";
+				document.nextForm.submit();
+			}
+			function selectShipSearchList() {
+				document.nextForm.pageIndex.value = 1;
+				document.nextForm.action = "/koswec/information/shipsearch/selectShipSearchList.do";
+				document.nextForm.submit();
+			}
+			//업종목록
+			function selectKndcdList(kndcdVal) {
+				nextForm.kndcd.value = kndcdVal;
+				selectShipSearchList();
+			}
+			//선종목록
+			function selectShpkndList(vesselVal) {
+				var strArray = vesselVal.split(',');
+				if(strArray != null) {
+					nextForm.vesselcode.value = strArray[0];
+					nextForm.vesselKind.value = strArray[1];
+				} else {
+					nextForm.vesselcode.value = "";
+					nextForm.vesselKind.value = "";
+				}
+				nextForm.vesselcodeDtl.value = "";				
+				selectShipSearchList();
+			}
+			//상세선종목록
+			function selectDtlshpkndList(vesselcodeVal) {
+				nextForm.vesselcodeDtl.value = vesselcodeVal;				
+				selectShipSearchList();
+			}
+</script>
+
+
+
+
+
+========================================================
