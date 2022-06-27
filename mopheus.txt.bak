@@ -453,6 +453,35 @@ var result2 = test.join('/'); 
 사본으로 공개가 가능합니다.
 
 ==========================================================================
+#)선원센터 선박조회 페이지
+업종: 1. 외항상선 2. 내항상선 3. 연근해어선 4. 원양어선 5. 해외취업상선 6. 해외취업어선
+선종: 11: 잡화 12: 컨테이너 13: 유조
+상세선종: 110: 여객선 120: 화객선 ...
 
+PaginationInfo는 페이징 처리를 위한 데이터들을 담고있는 클래스. PaginationTag 클래스에서 PaginationInfo에 담긴
+정보를 기반으로 페이징을 렌더링한다.
 
-교육예약시스템 바로가기 □
+이름	                설명	                        사용자입력여부	      계산공식
+currentPageNo	    현재 페이지 번호	                yes
+recordCountPerPage	한 페이지당 게시되는 게시물 건 수	    yes	
+pageSize	        페이지 리스트에 게시되는 페이지 건수	yes	
+totalRecordCount	전체 게시물 건 수	            yes	
+totalPageCount	    페이지 개수                   	no	              totalPageCount = ((totalRecordCount-1)/recordCountPerPage) + 1
+firstPageNoOnPageList	페이지 리스트의 첫 페이지 번호	no	              firstPageNoOnPageList = ((currentPageNo-1)/pageSize)*pageSize + 1
+lastPageNoOnPageList	페이지 리스트의 마지막 페이지 번호	no	          lastPageNoOnPageList = firstPageNoOnPageList+pageSize-1
+                                                                  if(lastPageNoOnPageList>totalRecordCount){lastPageNoOnPageList=totalPageCount}
+firstRecordIndex	페이징 SQL의 조건절에 사용되는 시작 rownum	no	      firstRecordIndex = (currentPageNo - 1) * recordCountPerPage
+lastRecordIndex	페이징 SQL의 조건절에 사용되는 마지막 rownum	    no	      lastRecordIndex = currentPageNo * recordCountPerPage
+
+=============================================================================
+<!-- 업종목록 -->
+	<select id="KWShipSearchDAO.selectKndcdList" resultClass="egovMap">
+		<![CDATA[
+   		 	SELECT KND_CD AS kndcd, CD_NM AS cdnm, KND_CD || ': ' || CD_NM AS kndcdname
+			  FROM KOSWEC_JOB.COMM1_CD
+			 WHERE grp_cd = '10'
+    	]]>
+	</select>
+	
+//결과 
+
