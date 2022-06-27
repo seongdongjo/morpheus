@@ -596,4 +596,51 @@ VESSEL_CODE   VESSEL_NAME   VESSEL_KIND    VESSELNAME
 			}
 </script>
 ========================================================
+#)전자정부프레임워크 properties 속성 불러오기
+전자정부프레임워크에서는 xml을 이용하여 설정정보를 저장하고 이를 사용할 수 있도록 되어있다.
+resources 밑에 context-properties.xml 에 작성하면 된다.
+
+//context-properties.xml
+<bean name="propertiesService" class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+      <property name="properties">
+         <map>
+            <entry key="pageUnit" value="10"/>
+            <entry key="pageSize" value="10"/>
+         </map>
+      </property>
+	</bean>
+
+//컨트롤러에서는 @Resource써주고 쓰면 된다.
+@Controller
+public class KWShipSearchController {	
+	private static final Logger logger = Logger.getLogger(KWShipSearchController.class);
+
+	/** Validator */
+	@Autowired
+	private DefaultBeanValidator beanValidator;
+	
+	/** EgovPropertyService */
+    @Resource(name = "propertiesService")
+    protected EgovPropertyService propertiesService;
+    
+    /** KWShipSearchService */
+	@Resource(name = "KWShipSearchService")
+    private KWShipSearchService KWShipSearchService;
+
+	/** EgovMessageSource */
+    @Resource(name="egovMessageSource")
+    EgovMessageSource EgovMessageSource;
+    
+    /*
+     * 선박조회 메인페이지
+     */
+    @RequestMapping("/koswec/information/shipsearch/selectShipSearchList.do")
+    public String selectShipSearchList(@ModelAttribute("shipSearchVO") KWShipSearchVO shipSearchVO, ModelMap model) throws Exception {
+    	
+    	shipSearchVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		shipSearchVO.setPageSize(propertiesService.getInt("pageSize"));		
+==================================================================
+#)업체코드 = com_cd, 호출부호 = call_sign (호출부호는 업체코드와 1대1이다 즉, 정해져있다)
+  업체명 = com_knm, 선박명 = ship_knm
+ 
 
