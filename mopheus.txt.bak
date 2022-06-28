@@ -642,3 +642,72 @@ public class KWShipSearchController {
 ==================================================================
 #)업체코드 = com_cd, 호출부호 = call_sign (호출부호는 업체코드와 1대1이다 즉, 정해져있다)
   업체명 = com_knm, 선박명 = ship_knm
+ 
+#)마이페이지 -> 받은 메시지함
+//id마다 idx는 고정
+MESSAGE_SENDER_INFO에서
+		seq_idx (메시지번호 pk)
+		regi_name (메시지보낸사람 이름)
+		regi_idx (메시지보낸사람의 고정값)
+		contents (html코드로 이력서보기 등등)
+
+MESSAGE_RECEIVER_INFO에서
+		sseq_idx
+		regi_idx (받은 회사 값)
+		regi_name (회사이름)
+
+MEMBER_INFO
+		mi_serial (유저고유번호)
+		mi_mggrade(10:선사, 20:선원)
+		mi_id(아이디)
+		
+
+
+----------------------------
+#)받은메시지 총 개수
+<select id="KWMypageMessageDAO.selectReceivedMessageTotalCount" parameterClass="mypageMessageVO" resultClass="int">
+		<![CDATA[
+			SELECT COUNT(*)
+              FROM KOSWECH.MESSAGE_SENDER_INFO SENDER
+                  ,(SELECT *
+                      FROM KOSWECH.MESSAGE_RECEIVER_INFO
+                     WHERE RECEIVER_ISUSE = '1') RECEIVER
+             WHERE SENDER.SEQ_IDX = RECEIVER.SSEQ_IDX(+)
+               AND RECEIVER.REGI_IDX = #regiIdx#
+               AND RECEIVER.RECEIVER_ISSAVED = 0
+		]]>
+		<isEqual prepend="AND" property="searchCondition" compareValue="SENDER.TITLE">
+			<![CDATA[   SENDER.TITLE LIKE '%'||#searchKeyword#||'%'  ]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="SENDER.CONTENTS">
+			<![CDATA[   SENDER.CONTENTS LIKE '%'||#searchKeyword#||'%'  ]]>
+		</isEqual>
+		<isEqual prepend="AND" property="searchCondition" compareValue="RECEIVER.REGI_NAME">
+			<![CDATA[   RECEIVER.REGI_NAME LIKE '%'||#searchKeyword#||'%'  ]]>
+		</isEqual>
+	</select>
+=============================================================
+#)회원상세정보
+/* Formatted on 2022/06/28 오전 10:39:59 (QP5 v5.256.13226.35538) */
+SELECT A.MI_SERIAL AS "memberIdx",
+       A.MI_ID AS "memberId",
+       A.MI_NAME AS "memberName",
+       A.MI_HTEL AS "homePhone",
+       (SELECT DAMO.DECRYPT_VAR ('DA_API', PID, '')
+          FROM KOSWEC_JOB.S_SEAMAN_INFO
+         WHERE MI_SERIAL = '1358')
+          AS "miSocialid",
+       NVL (B.MG_GRADE, 0) AS "groupType"
+  FROM (SELECT *
+          FROM KOSWECH.MEMBER_INFO_TB
+         WHERE ISUSE = '1') A,
+       (SELECT *
+          FROM KOSWECH.MEMBER_GROUP_INFO
+         WHERE ISUSE = '1') B
+ WHERE A.MI_SERIAL = B.MI_SERIAL(+) AND A.MI_SERIAL = '1358'; //left outer join
+
+//결과
+memberIdx memberId memberName homePhone     misocialid groupType
+1358      DS20002  신한해운(주)   041 034 8772                10
+
+=====================================================================
