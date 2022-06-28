@@ -711,6 +711,159 @@ memberIdx memberId memberName homePhone     misocialid groupType
 1358      DS20002  신한해운(주)   041 034 8772                10
 
 =====================================================================
+//찾기버튼 누를 때 회원 및 업체찾기
+#)MEMBER_GROUP_INFO TABLE  (3개의 컬럼만있음, 그래서 left outer join하면 b는 다나오고 a는 null도 나옴)
+MI_SERIAL  MG_GRADE  ISUSE
+555        10         1
+556        10         1
+...        ...        ...
+
+
+#)MEMBER_INFO_TB
+MI_SERIAL  MI_MGGRADE  MI_ID  MI_NAME  MI_EMAIL  ....
+
+
+SELECT *
+  FROM (SELECT T1.*, ROWNUM RN
+          FROM (  SELECT A.MI_SERIAL AS MEMBER_IDX,
+                         A.MI_ID,
+                         A.MI_NAME AS MEMBER_NAME,
+                         A.MI_HTEL AS HOME_PHONE,
+                         B.MG_GRADE,
+                         A.MI_EMAIL
+                    FROM (SELECT *
+                            FROM KOSWECH.MEMBER_INFO_TB
+                           WHERE ISUSE = '1') A,
+                         (SELECT *
+                            FROM KOSWECH.MEMBER_GROUP_INFO
+                           WHERE ISUSE = '1') B
+                   WHERE     A.MI_SERIAL = B.MI_SERIAL(+) //left outer join
+                         AND A.MI_STATE = '1'
+                         AND B.MG_GRADE = '10'
+                         AND LOWER (MI_NAME) LIKE '%' || '에스케이' || '%'
+                ORDER BY A.MI_NAME) T1)
+ WHERE RN BETWEEN 0 + 1 AND 0 + 10;
+
+
+//결과
+MEMBER_IDX   MI_ID   MEMBER_NAME      HOME_PHONE     MG_GRADE   MI_EMAIL   RN
+21724        sh10147  에스케이엠코리아(주)  051 469 7654   10                     1
+196          sh10001  에스케이해운(주)     051 605 0955   10        jo@asd.com   2
+
+=========================================================================
+#)팝업창(메시지보내기 -> 찾기)  찾기 누르면 팝업창이 뜬다.
+// 검색 check
+			function searchCheck(){
+				var fm = document.nextForm;
+	
+				if(fm.searchValue.value == null || fm.searchValue.value == ''){
+					alert('검색내용을 입력하세요.');
+					fm.searchValue.focus();
+					return;
+				}
+				fm.action = '/koswec/mypage/message/selectMemberSearchList.do';
+				fm.submit();
+			}
+			
+//값이 있는지의 여부 체크			
+function fc_isFill(theInput) {
+				if(theInput) {
+					if(theInput.value.split(' ').join('') == '') {
+						return false;
+					} else {
+						return true;
+					}
+				}
+				return false;
+			}
+			
+			
+//클릭하면 selCheck함수로 보낸다.
+<td><a href="#a" onclick="selCheck('${recList.memberIdx}', '${recList.memberName}')">${recList.memberName}</a></td>  
+			
+// 1명 선택(input check)
+			function selCheck(theIdx, theName) {
+				var varReceiverIdxObj = opener.document.getElementById('receiverIdx'); //부모페이지에서 receiverIdx를 찾는다.(부모페이지란 클릭했을 때 팝업창을 띄우게 한 페이지)
+				var varReceiverNameObj = opener.document.getElementById('receiverName');
+				
+				//찾아서 부모의 input에 넣어라
+				var varTempIdx = varReceiverIdxObj.value;
+				var varTempName = varReceiverNameObj.value;
+				
+				if(fc_isFill(varReceiverIdxObj))
+				{
+					varTempIdx += ',';
+					varTempName += ',';
+				}
+				varTempIdx += theIdx;
+				varTempName += theName;
+						
+				varReceiverIdxObj.value = varTempIdx;
+				varReceiverNameObj.value = varTempName;
+				self.close(); //팝업창을 알아서 닫는다
+			}
+
+// 복수개 선택 (확인버튼누르면 발동)
+			function selAllCheck() {
+				
+				var varReceiverIdxObj = opener.document.getElementById('receiverIdx'); 
+				var varReceiverNameObj = opener.document.getElementById('receiverName');
+				
+				var varMemberIdxObj = document.getElementsByName('memberIdx');
+				var varMemberNameObj = document.getElementsByName('memberName');
+				
+				var varTempIdx = varReceiverIdxObj.value;
+				var varTempName = varReceiverNameObj.value;
+				
+				//alert(varTempName);
+				
+				var idx = 0;
+				for(var i = 0 ; i <  varMemberIdxObj.length ; i ++) {
+					
+					if(varMemberIdxObj[i].checked) {
+						
+						if(fc_isFill(varReceiverIdxObj) || idx > 0) {
+							varTempIdx += ',';
+							varTempName += ',';
+						}
+						varTempIdx += varMemberIdxObj[i].value;
+						varTempName += varMemberNameObj[i].value;
+						
+						idx ++;
+					}
+				}
+				//alert(varTempName);
+				varReceiverIdxObj.value = varTempIdx;
+				varReceiverNameObj.value = varTempName;
+				self.close();
+			}
+==================================================================================
+
+<!-- 회원 탈퇴 Update -->
+	<update id="KWMarinerInfoDAO.updateMarinerSecede" parameterClass="marinerInfoVO">
+		<![CDATA[
+			UPDATE KOSWECH.MEMBER_INFO_TB
+			   SET ISUSE = '0', MI_STATE = '0'
+			 WHERE MI_SERIAL = #miSerial#
+		]]>
+	</update>
+===================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
