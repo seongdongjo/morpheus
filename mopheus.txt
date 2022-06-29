@@ -936,7 +936,94 @@ ________________________________________________
 		</tbody>
 </table>
 ====================================================================
+#)commons-lang-2.6.jar 라이브러리 추가 후
+import org.apache.commons.lang.StringEscapeUtils;
 
+public class HtmlEscapeTest {
+
+	public static void main(String[] args) {
+
+		String html = "<script>alert('Test');</script>";
+		
+		String escapeHtml = StringEscapeUtils.escapeHtml(html);
+		System.out.println("Escape : " + escapeHtml);
+		
+		String unescapeHtml = StringEscapeUtils.unescapeHtml(escapeHtml);
+		System.out.println("UnEscape : " + unescapeHtml);
+	}
+
+}
+
+//실행결과
+Escape : &lt;script&gt;alert('Test');&lt;/script&gt;
+UnEscape : <script>alert('Test');</script>
+====================================================================
+#)오시는 길
+
+koswec_home.com_contents_list 테이블
+
+cnt_id : 컨텐츠형식(pk) -> cnt_00138
+cnt_file_nm : 컨텐츠 파일명 -> loct_new
+cnt_stre_path : 컨텐츠 저장경로 
+cnt_korean_nm : 컨텐츠 명 -> 오시는길
+cnt_dc : 컨텐츠 설명
+cnt_url : 컨텐츠 주소   -> /cop/cnt/selectContentsPage.do?cntId=loct_new  로 컬럼에 들어가있다.
+cnt_contents : 컨텐츠 내용 -> html 코드가 들어가있다
+
+//caption은 화면상에는 출력이 안된다.
+<table class="tbl_col align_center">
+    <caption>
+        <details>
+            <summary>주소 및 교통편 안내</summary>
+        </details>
+    </caption>
+
+
+//cntTemplate.jsp
+<%@ page import="egovframework.com.cop.cnt.service.EgovContentsManageVO"%>
+<%@ page import="org.apache.commons.lang.StringEscapeUtils" %>
+EgovContentsManageVO vo = (EgovContentsManageVO) request.getAttribute("cntManageVO");
+String unescapeJson = StringEscapeUtils.unescapeHtml(vo.getCntContents());    // html entity 를 unescape 한다, cntContents에는 html코드가 들어가있다.
+
+<div id="center_txt">
+	<%out.println(unescapteJson);%>  //페이지가 딱 띄워지면 실행
+</div>
+
+ <div id="map" style="width:500px;height:350px;"></div>
+                <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e15051af8d9c6f144fa1c9eaac6f7bf7&libraries=services"></script>
+                <script>
+                    var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+                        mapOption = {
+                            center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
+                            level: 3 // 지도의 확대 레벨
+                        };
+
+                    // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
+                    var map = new kakao.maps.Map(mapContainer, mapOption);
+
+                    var geocoder = new daum.maps.services.Geocoder();
+
+                    geocoder.addressSearch('부산 중구 충장대로 9번길 66 (중앙동 4가) 한국선원센터 3층', function (result, status) {
+
+                        if (status === daum.maps.services.Status.OK) {
+
+                            var coords = new daum.maps.LatLng(result[0].y, result[0].x);
+
+                            var marker = new daum.maps.Marker({
+                                map: map,
+                                position: coords
+                            });
+
+                            var infowindow = new daum.maps.InfoWindow({
+                                content: '<div style="width:150px;text-align:center;padding:6px 0;">본부</div>'
+                            });
+                            infowindow.open(map, marker);
+                            map.setCenter(coords);
+                        }
+                    });
+                </script>
+            </div>
+=============================================================================
 
 
 
