@@ -1023,15 +1023,262 @@ String unescapeJson = StringEscapeUtils.unescapeHtml(vo.getCntContents());    //
                     });
                 </script>
             </div>
+=============================================================================
+#)휴양/복지 -> 콘도페이지
+//콘도누르고 들어오면 (carserial이 리조트 종류이다)
+@RequestMapping("/koswec/benefit/condoapp/condoReserveView.do")
+	public String condoReserveView(@ModelAttribute("condoVO") KWCondoappVO condoVO, ModelMap model) throws Exception {
+		
+//		EgovLoginVO user;
+//    	if(EgovUserDetailsHelper.isAuthenticated()){
+//    		 user = (EgovLoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+//    	}else{
+//    		model.addAttribute("message", EgovMessageSource.getMessage("fail.common.login"));
+//    		return "forward:/uat/uia/egovLoginUsr.do";
+//    	}
+		System.out.println("전전: " + condoVO.getCaSerial());
+		String caserial = EgovStringUtil.nvl(condoVO.getCaSerial());
+		System.out.println("전caserial: " + caserial);
+		if(condoVO.getCaserial() == 0 && caserial.equals("")){
+			caserial = "1"; //처음에 들어오면 리조트 1번이 나온다
+		}else if(condoVO.getCaserial() > 0 && caserial.equals("")){
+			caserial = Integer.toString(condoVO.getCaserial());
+		}
+		System.out.println("caserial: " + caserial);
+		model.addAttribute("caserial", caserial);
+    	return "egovframework/koswec/benefit/condoReserveView_2018new";
+	}		
+
+=======================================================================
+//콘드신청 기본정보입력
+#)직책목록(select box)
+<select id="KWCondoDAO.selectJigChekList" resultClass="egovMap">
+		<![CDATA[
+			  SELECT JIKMU_CODE
+			        ,JIKMU_SHORTNAME
+			    FROM KOSWEC_JOB.SMCM12
+			   WHERE JIKMU_CODE <> '40'
+			     AND JIKMU_CODE <> '41'
+			     AND JIKMU_CODE <> '42'
+			ORDER BY JIKMU_CODE ASC
+    	]]>
+	</select>
+
+//결과
+JIKMU_CODE   JIKMI_SHORTNAME
+10           선장
+11			 1등항해사
+12           2등항해사
+13           3등항해사
+14           실습항해사
+...
+
+--------------------
+#)업종목록
+SELECT KND_CD ,CD_NM FROM KOSWEC_JOB.COMM1_CD WHERE GRP_CD = '10';
+
+//결과
+KND_CD    CD_NM
+1         외항상선
+2         내항상선
+3         연근해어선
+...
+
+----------------------
+//콘도신청 예약사항
+#)콘도목록
+SELECT CN_SERIAL ,CN_NAME FROM KOSWEC_WEL.CONDO_NAME_TB ORDER BY CN_SERIAL;
+
+//결과
+CN_SERIAL   CN_NAME
+1           한화리조트
+2           켄싱턴리조트
+3           일성콘도
+4           대명리조트
+...
+
+----------------------
+//약관동의 (체크하면 Y)  -> 신청하면 send2() 라는 함수로 보내지게된다 (아래)
+<input type="radio" id="agree1_Y" name="memberAccept" value="Y">
+	<label for="agree1_Y">동의함</label>
+<input type="radio" id="agree1_N" name="memberAccept" value="N">
+	<label for="agree1_N">동의하지 않음</label>
+	
+
+	function send2(){
+				
+		var agree2_Y = $('input[name="memberAccept2"]:checked').val();
+		var agree1_Y = $('input[name="memberAccept"]:checked').val();
+		var agree3_Y = $('input[name="memberAccept3"]:checked').val();
+		var agree4_Y = $('input[name="memberAccept4"]:checked').val();
+		
+		if(agree1_Y != "Y")
+		{	
+			alert('개인정보 수집·이용에 동의하셔야 콘도신청이 가능합니다.');
+			$('#agree1_Y').focus();
+			return;
+		}	
+		
+		if(agree2_Y != "Y")
+		{	
+			alert('민감정보 처리 내역에 동의하셔야 콘도신청이 가능합니다.');
+			$('#agree2_Y').focus();
+			return;
+		}	
+		
+		if(agree3_Y != "Y")
+		{		
+			alert('제공에 관한 사항에 동의하셔야 콘도신청이 가능합니다.');
+			$('#agree3_Y').focus();
+			return;
+		}	
+		
+		if(agree4_Y != "Y")
+		{	
+			alert('알림정보 수신에 동의하셔야 콘도신청이 가능합니다.');
+			$("#agree4_Y").focus();
+			return;
+		}	
+		if(frm.wuEmbarkation_txt.value=="") {
+					alert("승무경력은 필수 입력 값 입니다.\n데이터 누락 시 담당자에게 문의 바랍니다.");
+					frm.wuEmbarkation_txt.focus();
+					return false;
+		}			
+		if(frm.caApplyname.value=="") {
+					alert("신청인 성명을 입력해주세요.");
+					frm.caApplyname.focus();
+					return false;
+				}				
+		if(frm.caBank.value== "") {
+					alert("지원금을 지급받으실 은행명을 입력해주세요.");
+					frm.caBank.focus();
+					return false;
+		}	
+		if(frm.caAccname.value=="") {
+			alert("예금주를 입력해주세요.");
+			frm.caAccname.focus();
+			return false;
+		}
+		if(frm.caAccount.value=="") {
+			alert("계좌번호를 입력해주세요.");
+			frm.caAccount.focus();
+			return false;
+		}			
+				
 
 
+=======================================================================
+#)콘도신청 파일업로드 설정은 context-common.xml에 설정
+  <bean id="spring.RegularCommonsMultipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="524288000" />
+        <property name="maxInMemorySize" value="524288000" />
+    </bean>
 
+    <!-- custom multi file resolver -->
+    <bean id="local.MultiCommonsMultipartResolver" class="egovframework.com.cmm.web.EgovMultipartResolver">
+        <property name="maxUploadSize" value="524288000" />
+        <property name="maxInMemorySize" value="524288000" />
+    </bean>
 
+    <!-- choose one from above and alias it to the name Spring expects -->
+    <!-- alias name="local.MultiCommonsMultipartResolver" alias="multipartResolver" /-->
+    <alias name="spring.RegularCommonsMultipartResolver" alias="multipartResolver" />
+=========================================================================
+/**
+	 * 콘도 개인정보 수집 동의서 페이지 이동
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping("/koswec/mypage/condo/condoAppAgree.do") 
+	public String condoAppAgree(@ModelAttribute("condoVO") KWCondoVO condoVO, ModelMap model,HttpServletResponse response) throws Exception {
 
+		// 0. Spring Security 사용자권한 처리
+    	Boolean isAuthenticated = EgovUserDetailsHelper.isAuthenticated();
+    	if(!isAuthenticated) {
+    		model.addAttribute("message", egovMessageSource.getMessage("fail.common.login"));
+    		return "forward:/uat/uia/egovLoginUsr.do";
+    	}
+		EgovLoginVO user = (EgovLoginVO)EgovUserDetailsHelper.getAuthenticatedUser();
+		
+		if("20".equals(user.getUserSe())){
+			return "egovframework/koswec/mypage/condo/agree_2018new";
+		}
+		else{
+    		model.addAttribute("message", "콘도신청은 선원회원만 해당됩니다.");
+    		return "forward:/com/sym/main/selectMainView.do";
+		}
+	}
+=====================================================================
+ /**
+     * 콘도명 및 지역명 선택시 평수 조회(Ajax)
+     * @param request
+     * @param httpServletResponse
+     * @param session
+     * @throws Exception
+     */
+    @RequestMapping(value="/koswec/mypage/condo/selectPyeongInfo.do")
+    public void selectPyeongInfo(@RequestParam("condo") String condo,
+    							 @RequestParam("loc") String loc,
+    							 HttpServletRequest request, HttpServletResponse response, HttpSession session) throws Exception {
+    	
+    	try{
+	    	List<KWCondoVO> pyeongList = KWCondoService.selectCondoPyeongInfoList(condo, loc);
+	    	
+	    	response.setContentType("text/xml;charset=UTF-8");
+	    	response.setHeader("Cache-Control", "no-cache");
+	    	PrintWriter out = response.getWriter();
+	    	StringBuffer sb = new StringBuffer();
+	    	
+	    	sb.append("<response>");
+	    	sb.append("<code>success</code>");
+	    	
+	    	for ( int inx = 0 ; inx < pyeongList.size() ; inx ++ ) {
+	    		
+	    		KWCondoVO condoPyeong = (KWCondoVO) pyeongList.get(inx);
+	    		
+	    		sb.append("<result>");
+	    		sb.append("<seq><![CDATA[" 		+ condoPyeong.getSeq()		+ "]]></seq>");
+	    		sb.append("<pyeong><![CDATA[" 	+ condoPyeong.getPyeong()	+ "]]></pyeong>");
+	    		sb.append("</result>");
+	    	}
+	    	sb.append("</response>");
+	    	out.println(sb.toString()); //condoappRegist_2018new.jsp로 이동
+	    	
+    	} catch (Exception e) {
+    		logger.error("selectPyeongInfo() :::: ", e);
+    	}
+    }
+	
+-------------------
 
-
-
-
+var pyeongList = new Array();
+			function doChangeCondoLoc(val_target, condo, loc) {
+				var target = document.getElementById(val_target);
+				eval("condoValue=document.frm."+condo+".value");
+				eval("locValue=document.frm."+loc+".value");
+				$.ajax
+				( { type:"post"
+				  , dataType:"xml"
+				  , url:"/koswec/mypage/condo/selectPyeongInfo.do?condo="+condoValue+"&loc="+locValue
+				  , async:false
+				  , success:function(xml){
+						if ( $(xml).find("result").length > 0 ) {
+							pyeongList = new Array();
+							$(xml).find("result").each(function() {
+								pyeongList.push( $(this).find("seq").text() + "@"
+										  		+ $(this).find("pyeong").text()
+										  		);
+							});
+							fnCreatePyeong(pyeongList, target);
+						}
+					}
+				  , error: function(xhr, status, error) {
+					  alert(error); 
+					  }
+				} 
+				);
+			}
+============================================================================
 
 
 
